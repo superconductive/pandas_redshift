@@ -52,7 +52,8 @@ def pandas_to_redshift(data_frame,
                        quotechar = '"',
                        dateformat = 'auto',
                        timeformat = 'auto',
-                       append = False):
+                       append = False,
+                       server_side_encryption=None):
     rrwords = open(os.path.join(os.path.dirname(__file__), \
     'redshift_reserve_words.txt'), 'r').readlines()
     rrwords = [r.strip().lower() for r in rrwords]
@@ -66,12 +67,12 @@ def pandas_to_redshift(data_frame,
             data_frame.to_csv(csv_name, index = index, sep = delimiter)
             print('saved file {0} in {1}'.format(csv_name, os.getcwd()))
             data_send = open(csv_name, 'rb')
-            s3.Bucket(s3_bucket_var).put_object(Key= s3_subdirectory_var + csv_name, Body = data_send)
+            s3.Bucket(s3_bucket_var).put_object(Key= s3_subdirectory_var + csv_name, Body = data_send, ServerSideEncryption= server_side_encryption)
             print('saved file {0} in bucket {1}'.format(csv_name, s3_subdirectory_var + csv_name))
         else:
             csv_buffer = StringIO()
             data_frame.to_csv(csv_buffer, index = index, sep = delimiter)
-            s3.Bucket(s3_bucket_var).put_object(Key= s3_subdirectory_var + csv_name, Body = csv_buffer.getvalue())
+            s3.Bucket(s3_bucket_var).put_object(Key= s3_subdirectory_var + csv_name, Body = csv_buffer.getvalue(), ServerSideEncryption= server_side_encryption)
             print('saved file {0} in bucket {1}'.format(csv_name, s3_subdirectory_var + csv_name))
         # CREATE AN EMPTY TABLE IN REDSHIFT
         if index == True:
