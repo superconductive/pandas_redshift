@@ -53,7 +53,8 @@ def pandas_to_redshift(data_frame,
                        dateformat = 'auto',
                        timeformat = 'auto',
                        append = False,
-                       server_side_encryption=None):
+                       server_side_encryption=None,
+                       show_aws_keys=False):
     rrwords = open(os.path.join(os.path.dirname(__file__), \
     'redshift_reserve_words.txt'), 'r').readlines()
     rrwords = [r.strip().lower() for r in rrwords]
@@ -95,17 +96,30 @@ def pandas_to_redshift(data_frame,
             connect.commit()
         # CREATE THE COPY STATEMENT TO SEND FROM S3 TO THE TABLE IN REDSHIFT
         bucket_name = 's3://{0}/{1}'.format(s3_bucket_var, s3_subdirectory_var + csv_name)
-        s3_to_sql = """
-        copy {0}
-        from '{1}'
-        delimiter '{2}'
-        ignoreheader 1
-        csv quote as '{3}'
-        dateformat '{4}'
-        timeformat '{5}'
-        access_key_id '{6}'
-        secret_access_key '{7}';
-        """.format(redshift_table_name, bucket_name, delimiter, quotechar, dateformat, timeformat, aws_1, aws_2)
+        if show_aws_keys:
+            s3_to_sql = """
+            copy {0}
+            from '{1}'
+            delimiter '{2}'
+            ignoreheader 1
+            csv quote as '{3}'
+            dateformat '{4}'
+            timeformat '{5}'
+            access_key_id '{6}'
+            secret_access_key '{7}';
+            """.format(redshift_table_name, bucket_name, delimiter, quotechar, dateformat, timeformat, aws_1, aws_2)
+        
+        else:
+            s3_to_sql = """
+            copy {0}
+            from '{1}'
+            delimiter '{2}'
+            ignoreheader 1
+            csv quote as '{3}'
+            dateformat '{4}'
+            timeformat '{5}'
+            """.format(redshift_table_name, bucket_name, delimiter, quotechar, dateformat, timeformat)
+
         print(s3_to_sql)
         # send the file
         print('FILLING THE TABLE IN REDSHIFT')
